@@ -97,7 +97,7 @@ export const ReportsView = ({ user }: { user: User }) => {
   const firstDayOfMonth = getLocalISODate(new Date(now.getFullYear(), now.getMonth(), 1));
   const firstDayOfYear = getLocalISODate(new Date(now.getFullYear(), 0, 1));
 
-  const [startDate, setStartDate] = useState(firstDayOfMonth);
+  const [startDate, setStartDate] = useState(firstDayOfYear);
   const [endDate, setEndDate] = useState(today);
   const [search, setSearch] = useState('');
 
@@ -160,7 +160,7 @@ export const ReportsView = ({ user }: { user: User }) => {
 
       const [acc, jrnl, asst] = await Promise.all([
         orderService.getAccounts(user.user),
-        orderService.getJournalEntries(user.user, toLocalISOString(parseLocalISODate(sDate)), toLocalISOString(parseLocalISODate(eDate))),
+        orderService.getJournalEntries(user.user, sDate, eDate),
         orderService.getAssets(user.user)
       ]);
       setAccounts(acc);
@@ -190,8 +190,8 @@ export const ReportsView = ({ user }: { user: User }) => {
   const [cumulativeEntries, setCumulativeEntries] = useState<JournalEntry[]>([]);
   useEffect(() => {
     if (activeTab === 'financial' || activeTab === 'accounts' || activeTab === 'inventory') {
-      const eDate = activeTab === 'financial' ? `${reportYear}-12-31T23:59:59` : (activeTab === 'inventory' ? `${inventoryYear}-12-31T23:59:59` : endDate);
-      orderService.getJournalEntries(user.user, undefined, eDate.includes('T') ? eDate : toLocalISOString(parseLocalISODate(eDate)))
+      const eDate = activeTab === 'financial' ? `${reportYear}-12-31` : (activeTab === 'inventory' ? `${inventoryYear}-12-31` : endDate);
+      orderService.getJournalEntries(user.user, undefined, eDate)
         .then(setCumulativeEntries);
     }
   }, [activeTab, endDate, reportYear, inventoryYear, user.user]);

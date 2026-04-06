@@ -348,7 +348,10 @@ export const orderService = {
       .eq('user_id', userId)
       .order('date', { ascending: false });
     
-    if (startDate) query = query.gte('date', startDate);
+    if (startDate) {
+      const finalStartDate = startDate.includes('T') ? startDate : `${startDate}T00:00:00`;
+      query = query.gte('date', finalStartDate);
+    }
     if (endDate) {
       // If endDate is just a date (YYYY-MM-DD), make it end of day
       const finalEndDate = endDate.includes('T') ? endDate : `${endDate}T23:59:59`;
