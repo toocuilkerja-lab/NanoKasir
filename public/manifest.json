@@ -1,6 +1,6 @@
 {
-  "name": "NanoKasir1",
-  "short_name": "NanoKasir2",
+  "name": "NanoKasir",
+  "short_name": "NanoKasir",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#f97316",
