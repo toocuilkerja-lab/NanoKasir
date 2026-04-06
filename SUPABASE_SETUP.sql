@@ -1,4 +1,4 @@
--- SQL Setup for Warung Jxxcok POS
+-- SQL Setup for NanoKasir POS
 -- Copy and paste this into your Supabase SQL Editor
 
 -- 1. Users Table
@@ -85,4 +85,4 @@ CREATE POLICY "Public Access" ON assets FOR ALL USING (true);
 
 -- Insert a sample user (Optional)
 -- INSERT INTO users (username, password, shop_name, address) 
--- VALUES ('0601', '123456', 'Warung Jxxcok Pusat', 'Jl. Contoh No. 123');
+-- VALUES ('0601', '123456', 'Warung JxxCuk', 'Jl. Contoh No. 123');

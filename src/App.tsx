@@ -1007,7 +1007,7 @@ const LoginView = ({ onLogin }: { onLogin: (u: string, p: string) => void }) => 
           <div className="w-20 h-20 bg-orange-100 rounded-3xl flex items-center justify-center text-orange-500 mx-auto mb-4">
             <Store className="w-10 h-10" />
           </div>
-          <h1 className="text-3xl font-black text-gray-800">Warung Jxxcok</h1>
+          <h1 className="text-3xl font-black text-gray-800">NanoKasir</h1>
           <p className="text-gray-400 text-sm">Masuk ke sistem POS Anda</p>
         </div>
 
