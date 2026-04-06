@@ -1,0 +1,7 @@
+{
+  "name": "Aplikasi_UMKM",
+  "description": "Aplikasi POS ringan dengan database Google Sheets dan dukungan cetak Bluetooth.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}

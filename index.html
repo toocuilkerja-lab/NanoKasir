@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Warung Jxxcok POS</title>
+    <link rel="icon" type="image/svg+xml" href="/gemini-svg.svg" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#f97316" />
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').then(registration => {
+            registration.onupdatefound = () => {
+              const installingWorker = registration.installing;
+              if (installingWorker == null) return;
+              installingWorker.onstatechange = () => {
+                if (installingWorker.state === 'installed') {
+                  if (navigator.serviceWorker.controller) {
+                    // New content is available; please refresh.
+                    console.log('New content is available; please refresh.');
+                    // Optionally show a toast or just reload
+                    // window.location.reload();
+                  } else {
+                    // Content is cached for offline use.
+                    console.log('Content is cached for offline use.');
+                  }
+                }
+              };
+            };
+          });
+        });
+
+        // Ensure the page reloads when the new service worker takes control
+        let refreshing = false;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          if (!refreshing) {
+            window.location.reload();
+            refreshing = true;
+          }
+        });
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+

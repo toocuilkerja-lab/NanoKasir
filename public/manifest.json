@@ -1,0 +1,15 @@
+{
+  "name": "Warung Jxxcok POS",
+  "short_name": "Jxxcok POS",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f97316",
+  "theme_color": "#f97316",
+  "icons": [
+    {
+      "src": "/gemini-svg.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
