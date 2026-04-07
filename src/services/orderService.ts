@@ -57,6 +57,42 @@ export const orderService = {
     }
   },
 
+  async register(username: string, pass: string, shopName: string, address: string): Promise<User | null> {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .insert({
+          username,
+          password: pass,
+          shop_name: shopName,
+          address
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Registration error:', error);
+        throw error;
+      }
+
+      // Initialize accounts for new user
+      await this.initializeAccounts(username);
+
+      const user: User = {
+        user: data.username,
+        pass: data.password,
+        nama: data.shop_name,
+        alamat: data.address || ''
+      };
+
+      localStorage.setItem('pos_user', JSON.stringify(user));
+      return user;
+    } catch (err) {
+      console.error('Unexpected registration error:', err);
+      throw err;
+    }
+  },
+
   logout() {
     localStorage.removeItem('pos_user');
   },
@@ -272,38 +308,83 @@ export const orderService = {
 
   async initializeAccounts(userId: string): Promise<void> {
     const defaultAccounts: Omit<Account, 'id'>[] = [
-      { account_code: '1101', account_name: 'Kas', category: 'Aset', sub_category: 'Aset Lancar', user_id: userId },
-      { account_code: '1102', account_name: 'Bank', category: 'Aset', sub_category: 'Aset Lancar', user_id: userId },
-      { account_code: '1103', account_name: 'Piutang', category: 'Aset', sub_category: 'Aset Lancar', user_id: userId },
-      { account_code: '1104', account_name: 'Persediaan Barang', category: 'Aset', sub_category: 'Aset Lancar', user_id: userId },
-      { account_code: '1201', account_name: 'Tanah', category: 'Aset', sub_category: 'Aset Tetap', user_id: userId },
-      { account_code: '1202', account_name: 'Bangunan', category: 'Aset', sub_category: 'Aset Tetap', user_id: userId },
-      { account_code: '1203', account_name: 'Inventaris', category: 'Aset', sub_category: 'Aset Tetap', user_id: userId },
-      { account_code: '1204', account_name: 'Kendaraan', category: 'Aset', sub_category: 'Aset Tetap', user_id: userId },
-      { account_code: '1299', account_name: 'Akumulasi Penyusutan', category: 'Aset', sub_category: 'Aset Tetap', user_id: userId },
-      { account_code: '2101', account_name: 'Utang Usaha', category: 'Kewajiban', sub_category: 'Utang Jangka Pendek', user_id: userId },
-      { account_code: '3101', account_name: 'Modal Pemilik', category: 'Ekuitas', sub_category: 'Modal', user_id: userId },
-      { account_code: '4101', account_name: 'Penjualan', category: 'Pendapatan', sub_category: 'Pendapatan Usaha', user_id: userId },
-      { account_code: '4201', account_name: 'Pendapatan Lainnya', category: 'Pendapatan', sub_category: 'Pendapatan Lainnya', user_id: userId },
-      { account_code: '5101', account_name: 'Beban Gaji', category: 'Beban', sub_category: 'Beban Operasional', user_id: userId },
-      { account_code: '5102', account_name: 'Beban Listrik', category: 'Beban', sub_category: 'Beban Operasional', user_id: userId },
-      { account_code: '5103', account_name: 'Beban ATK', category: 'Beban', sub_category: 'Beban Operasional', user_id: userId },
-      { account_code: '5104', account_name: 'Beban Penyusutan', category: 'Beban', sub_category: 'Beban Operasional', user_id: userId },
-      { account_code: '5201', account_name: 'Persediaan Awal', category: 'Beban', sub_category: 'Beban HPP', user_id: userId },
-      { account_code: '5202', account_name: 'Pembelian', category: 'Beban', sub_category: 'Beban HPP', user_id: userId },
-      { account_code: '5203', account_name: 'Persediaan Akhir', category: 'Beban', sub_category: 'Beban HPP', user_id: userId },
-      { account_code: '5204', account_name: 'HPP', category: 'Beban', sub_category: 'Beban HPP', user_id: userId },
-      { account_code: '5901', account_name: 'Beban Lainnya', category: 'Beban', sub_category: 'Beban Lainnya', user_id: userId },
+      { category: 'Aset', sub_category: 'Aset Lancar', account_name: 'Piutang', user_id: userId, account_code: '1201' },
+      { category: 'Aset', sub_category: 'Aset Lancar', account_name: 'Deposito', user_id: userId, account_code: '1103' },
+      { category: 'Aset', sub_category: 'Aset Lancar', account_name: 'Kas', user_id: userId, account_code: '1101' },
+      { category: 'Aset', sub_category: 'Aset Lancar', account_name: 'Bank', user_id: userId, account_code: '1102' },
+      { category: 'Aset', sub_category: 'Aset Lancar', account_name: 'Persediaan Barang', user_id: userId, account_code: '1301' },
+      { category: 'Aset', sub_category: 'Aset Lancar', account_name: 'Sewa Dibayar di Muka', user_id: userId, account_code: '1501' },
+      { category: 'Aset', sub_category: 'Aset Lancar', account_name: 'Perlengkapan Kantor', user_id: userId, account_code: '1401' },
+      { category: 'Aset', sub_category: 'Aset Lancar', account_name: 'Asuransi Dibayar di Muka', user_id: userId, account_code: '1502' },
+      { category: 'Aset', sub_category: 'Aset Takberwujud', account_name: 'Hak Paten', user_id: userId, account_code: '1801' },
+      { category: 'Aset', sub_category: 'Aset Takberwujud', account_name: 'Merek Dagang', user_id: userId, account_code: '1802' },
+      { category: 'Aset', sub_category: 'Aset Takberwujud', account_name: 'Goodwill', user_id: userId, account_code: '1804' },
+      { category: 'Aset', sub_category: 'Aset Takberwujud', account_name: 'Software/Perangkat Lunak', user_id: userId, account_code: '1803' },
+      { category: 'Aset', sub_category: 'Aset Tetap', account_name: 'Kendaraan', user_id: userId, account_code: '1703' },
+      { category: 'Aset', sub_category: 'Aset Tetap', account_name: 'Peralatan', user_id: userId, account_code: '1704' },
+      { category: 'Aset', sub_category: 'Aset Tetap', account_name: 'Tanah', user_id: userId, account_code: '1701' },
+      { category: 'Aset', sub_category: 'Aset Tetap', account_name: 'Bangunan', user_id: userId, account_code: '1702' },
+      { category: 'Aset', sub_category: 'Aset Tetap', account_name: 'Akumulasi Penyusutan', user_id: userId, account_code: '1799' },
+      { category: 'Aset', sub_category: 'Aset Tidak Lancar Lainnya', account_name: 'Uang Jaminan/Deposit', user_id: userId, account_code: '1902' },
+      { category: 'Aset', sub_category: 'Aset Tidak Lancar Lainnya', account_name: 'Piutang Jangka Panjang', user_id: userId, account_code: '1901' },
+      { category: 'Beban', sub_category: 'Beban HPP', account_name: 'Persediaan Akhir', user_id: userId, account_code: '5103' },
+      { category: 'Beban', sub_category: 'Beban HPP', account_name: 'Persediaan Awal', user_id: userId, account_code: '5101' },
+      { category: 'Beban', sub_category: 'Beban HPP', account_name: 'Pembelian', user_id: userId, account_code: '5102' },
+      { category: 'Beban', sub_category: 'Beban Lainnya', account_name: 'Beban Bunga Pinjaman', user_id: userId, account_code: '8102' },
+      { category: 'Beban', sub_category: 'Beban Lainnya', account_name: 'Beban Administrasi Bank', user_id: userId, account_code: '8101' },
+      { category: 'Beban', sub_category: 'Beban Lainnya', account_name: 'Kerugian Penjualan Aset Tetap', user_id: userId, account_code: '8105' },
+      { category: 'Beban', sub_category: 'Beban Lainnya', account_name: 'Beban Pajak Bunga Bank', user_id: userId, account_code: '8104' },
+      { category: 'Beban', sub_category: 'Beban Lainnya', account_name: 'Kerugian Selisih Kurs', user_id: userId, account_code: '8103' },
+      { category: 'Beban', sub_category: 'Beban Operasional', account_name: 'Beban Listrik', user_id: userId, account_code: '6102' },
+      { category: 'Beban', sub_category: 'Beban Operasional', account_name: 'Beban Gaji', user_id: userId, account_code: '6101' },
+      { category: 'Beban', sub_category: 'Beban Operasional', account_name: 'Beban ATK', user_id: userId, account_code: '6103' },
+      { category: 'Beban', sub_category: 'Beban Operasional', account_name: 'Beban Penyusutan', user_id: userId, account_code: '6104' },
+      { category: 'Beban', sub_category: 'Beban Operasional', account_name: 'Beban Lainnya', user_id: userId, account_code: '6199' },
+      { category: 'Aset', sub_category: 'Investasi Jangka Panjang', account_name: 'Investasi Saham', user_id: userId, account_code: '1601' },
+      { category: 'Aset', sub_category: 'Investasi Jangka Panjang', account_name: 'Properti Investasi', user_id: userId, account_code: '1603' },
+      { category: 'Aset', sub_category: 'Investasi Jangka Panjang', account_name: 'Investasi Obligasi', user_id: userId, account_code: '1602' },
+      { category: 'Ekuitas', sub_category: 'Modal', account_name: 'Dividen / Prive', user_id: userId, account_code: '3103' },
+      { category: 'Ekuitas', sub_category: 'Modal', account_name: 'Modal Pemilik', user_id: userId, account_code: '3101' },
+      { category: 'Ekuitas', sub_category: 'Modal', account_name: 'Laba Ditahan', user_id: userId, account_code: '3102' },
+      { category: 'Pendapatan', sub_category: 'Pendapatan Lainnya', account_name: 'Pendapatan Bunga Bank', user_id: userId, account_code: '7101' },
+      { category: 'Pendapatan', sub_category: 'Pendapatan Lainnya', account_name: 'Keuntungan Selisih Kurs', user_id: userId, account_code: '7102' },
+      { category: 'Pendapatan', sub_category: 'Pendapatan Lainnya', account_name: 'Pendapatan Lainnya', user_id: userId, account_code: '4201' },
+      { category: 'Pendapatan', sub_category: 'Pendapatan Lainnya', account_name: 'Keuntungan Penjualan Aset Tetap', user_id: userId, account_code: '7103' },
+      { category: 'Pendapatan', sub_category: 'Pendapatan Usaha', account_name: 'Penjualan', user_id: userId, account_code: '4101' },
+      { category: 'Kewajiban', sub_category: 'Utang Jangka Panjang', account_name: 'Utang Bank', user_id: userId, account_code: '2201' },
+      { category: 'Kewajiban', sub_category: 'Utang Jangka Panjang', account_name: 'Utang Obligasi', user_id: userId, account_code: '2202' },
+      { category: 'Kewajiban', sub_category: 'Utang Jangka Pendek', account_name: 'Utang Gaji', user_id: userId, account_code: '2108' },
+      { category: 'Kewajiban', sub_category: 'Utang Jangka Pendek', account_name: 'Pendapatan Diterima di Muka', user_id: userId, account_code: '2109' },
+      { category: 'Kewajiban', sub_category: 'Utang Jangka Pendek', account_name: 'Utang Jangka Pendek Lainnya', user_id: userId, account_code: '2199' },
+      { category: 'Kewajiban', sub_category: 'Utang Jangka Pendek', account_name: 'Utang PPN ', user_id: userId, account_code: '2102' },
+      { category: 'Kewajiban', sub_category: 'Utang Jangka Pendek', account_name: 'Utang PPh 21', user_id: userId, account_code: '2103' },
+      { category: 'Kewajiban', sub_category: 'Utang Jangka Pendek', account_name: 'Utang PPh 29', user_id: userId, account_code: '2107' },
+      { category: 'Kewajiban', sub_category: 'Utang Jangka Pendek', account_name: 'Utang PPh 25', user_id: userId, account_code: '2106' },
+      { category: 'Kewajiban', sub_category: 'Utang Jangka Pendek', account_name: 'Utang PPh 4(2)', user_id: userId, account_code: '2105' },
+      { category: 'Kewajiban', sub_category: 'Utang Jangka Pendek', account_name: 'Beban Akrual', user_id: userId, account_code: '2110' },
+      { category: 'Kewajiban', sub_category: 'Utang Jangka Pendek', account_name: 'Utang Usaha', user_id: userId, account_code: '2101' },
+      { category: 'Kewajiban', sub_category: 'Utang Jangka Pendek', account_name: 'Utang PPh 23', user_id: userId, account_code: '2104' },
     ];
 
-    // Check if accounts already exist
-    const { count } = await supabase
-      .from('accounts')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', userId);
+    try {
+      // Check if accounts already exist for this user
+      const { data, error: fetchError } = await supabase
+        .from('accounts')
+        .select('id')
+        .eq('user_id', userId)
+        .limit(1);
 
-    if (count === 0) {
-      await supabase.from('accounts').insert(defaultAccounts);
+      if (fetchError) throw fetchError;
+
+      if (!data || data.length === 0) {
+        console.log(`Initializing ${defaultAccounts.length} accounts for user: ${userId}`);
+        const { error: insertError } = await supabase.from('accounts').insert(defaultAccounts);
+        if (insertError) throw insertError;
+        console.log('Accounts initialized successfully');
+      }
+    } catch (err) {
+      console.error('Failed to initialize accounts:', err);
+      throw err; // Re-throw to be caught by register method
     }
   },
 

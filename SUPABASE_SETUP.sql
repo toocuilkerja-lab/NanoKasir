@@ -36,10 +36,13 @@ CREATE TABLE IF NOT EXISTS orders (
 -- 4. Accounts Table
 CREATE TABLE IF NOT EXISTS accounts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name TEXT UNIQUE NOT NULL,
-  type TEXT NOT NULL, -- 'asset', 'liability', 'equity', 'revenue', 'expense'
+  account_code TEXT,
+  account_name TEXT NOT NULL,
+  category TEXT NOT NULL, -- 'Aset', 'Kewajiban', 'Ekuitas', 'Pendapatan', 'Beban'
+  sub_category TEXT,
   user_id TEXT NOT NULL,
-  created_at TIMESTAMP DEFAULT NOW()
+  created_at TIMESTAMP DEFAULT NOW(),
+  UNIQUE(account_name, user_id)
 );
 
 -- 5. Journal Entries Table
@@ -60,9 +63,9 @@ CREATE TABLE IF NOT EXISTS assets (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
   purchase_date TIMESTAMP NOT NULL,
-  purchase_price NUMERIC NOT NULL,
-  useful_life INTEGER NOT NULL, -- in years
-  salvage_value NUMERIC DEFAULT 0,
+  acquisition_cost NUMERIC NOT NULL,
+  kelompok TEXT NOT NULL, -- '1', '2', '3', '4', 'BP', 'BTP'
+  jenis TEXT NOT NULL, -- 'Inventaris', 'Bangunan', etc
   user_id TEXT NOT NULL,
   created_at TIMESTAMP DEFAULT NOW()
 );

@@ -17,7 +17,9 @@ import {
   Calendar,
   FileText,
   BookOpen,
-  Receipt
+  Receipt,
+  MapPin,
+  User as UserIcon
 } from 'lucide-react';
 import { Order, MenuItem, User, OrderItem, OrderStatus } from './types';
 import { orderService } from './services/orderService';
@@ -980,10 +982,33 @@ const SettingsView = ({
 
 import { isSupabaseConfigured } from './lib/supabase';
 
-const LoginView = ({ onLogin }: { onLogin: (u: string, p: string) => void }) => {
+const LoginView = ({ onLogin, onRegister }: { onLogin: (u: string, p: string) => void; onRegister: (u: string, p: string, n: string, a: string) => void }) => {
+  const [isRegister, setIsRegister] = useState(false);
   const [u, setU] = useState('');
   const [p, setP] = useState('');
+  const [n, setN] = useState('');
+  const [a, setA] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async () => {
+    setLoading(true);
+    try {
+      if (isRegister) {
+        if (!u || !p || !n) {
+          alert("Username, Password, dan Nama Toko wajib diisi.");
+          setLoading(false);
+          return;
+        }
+        await onRegister(u, p, n, a);
+      } else {
+        await onLogin(u, p);
+      }
+    } catch (e: any) {
+      alert(e.message || "Terjadi kesalahan.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-orange-500 flex items-center justify-center p-6">
@@ -1008,42 +1033,89 @@ const LoginView = ({ onLogin }: { onLogin: (u: string, p: string) => void }) => 
             <Store className="w-10 h-10" />
           </div>
           <h1 className="text-3xl font-black text-gray-800">NanoKasir</h1>
-          <p className="text-gray-400 text-sm">Masuk ke sistem POS Anda</p>
+          <p className="text-gray-400 text-sm">{isRegister ? 'Daftar akun baru' : 'Masuk ke sistem POS Anda'}</p>
         </div>
 
         <div className="space-y-4">
           <div className="space-y-1">
-            <label className="text-xs font-bold text-gray-400 ml-2">USER ID</label>
-            <input 
-              type="text" 
-              value={u}
-              onChange={e => setU(e.target.value)}
-              placeholder="0601..."
-              className="w-full bg-gray-50 border-none rounded-2xl px-6 py-4 focus:ring-2 focus:ring-orange-500 transition-all"
-            />
+            <label className="text-xs font-bold text-gray-400 ml-2">USER ID / USERNAME</label>
+            <div className="relative">
+              <UserIcon className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300" />
+              <input 
+                type="text" 
+                value={u}
+                onChange={e => setU(e.target.value)}
+                placeholder="Username..."
+                className="w-full bg-gray-50 border-none rounded-2xl pl-14 pr-6 py-4 focus:ring-2 focus:ring-orange-500 transition-all"
+              />
+            </div>
           </div>
           <div className="space-y-1">
             <label className="text-xs font-bold text-gray-400 ml-2">PASSWORD</label>
-            <input 
-              type="password" 
-              value={p}
-              onChange={e => setP(e.target.value)}
-              placeholder="••••••••"
-              className="w-full bg-gray-50 border-none rounded-2xl px-6 py-4 focus:ring-2 focus:ring-orange-500 transition-all"
-            />
+            <div className="relative">
+              <XCircle className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300" /> {/* Using XCircle as placeholder for lock icon if not available */}
+              <input 
+                type="password" 
+                value={p}
+                onChange={e => setP(e.target.value)}
+                placeholder="••••••••"
+                className="w-full bg-gray-50 border-none rounded-2xl pl-14 pr-6 py-4 focus:ring-2 focus:ring-orange-500 transition-all"
+              />
+            </div>
           </div>
+
+          {isRegister && (
+            <motion.div 
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              className="space-y-4 pt-2"
+            >
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-gray-400 ml-2">NAMA TOKO</label>
+                <div className="relative">
+                  <Store className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300" />
+                  <input 
+                    type="text" 
+                    value={n}
+                    onChange={e => setN(e.target.value)}
+                    placeholder="Nama Toko Anda..."
+                    className="w-full bg-gray-50 border-none rounded-2xl pl-14 pr-6 py-4 focus:ring-2 focus:ring-orange-500 transition-all"
+                  />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-gray-400 ml-2">ALAMAT</label>
+                <div className="relative">
+                  <MapPin className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300" />
+                  <input 
+                    type="text" 
+                    value={a}
+                    onChange={e => setA(e.target.value)}
+                    placeholder="Alamat Toko..."
+                    className="w-full bg-gray-50 border-none rounded-2xl pl-14 pr-6 py-4 focus:ring-2 focus:ring-orange-500 transition-all"
+                  />
+                </div>
+              </div>
+            </motion.div>
+          )}
         </div>
 
-        <button 
-          disabled={loading}
-          onClick={() => {
-            setLoading(true);
-            onLogin(u, p);
-          }}
-          className="w-full bg-orange-500 text-white font-black py-5 rounded-2xl shadow-xl shadow-orange-200 active:scale-95 transition-all disabled:opacity-50"
-        >
-          {loading ? 'Menghubungkan...' : 'MASUK SEKARANG'}
-        </button>
+        <div className="space-y-4">
+          <button 
+            disabled={loading}
+            onClick={handleSubmit}
+            className="w-full bg-orange-500 text-white font-black py-5 rounded-2xl shadow-xl shadow-orange-200 active:scale-95 transition-all disabled:opacity-50"
+          >
+            {loading ? 'Memproses...' : (isRegister ? 'DAFTAR SEKARANG' : 'MASUK SEKARANG')}
+          </button>
+
+          <button 
+            onClick={() => setIsRegister(!isRegister)}
+            className="w-full text-orange-500 font-bold text-sm hover:underline"
+          >
+            {isRegister ? 'Sudah punya akun? Masuk di sini' : 'Belum punya akun? Daftar di sini'}
+          </button>
+        </div>
       </motion.div>
     </div>
   );
@@ -1244,6 +1316,23 @@ export default function App() {
     }
   };
 
+  const handleRegister = async (u: string, p: string, n: string, a: string) => {
+    try {
+      const registered = await orderService.register(u, p, n, a);
+      if (registered) {
+        setUser(registered);
+        loadData(registered.user);
+      }
+    } catch (e: any) {
+      if (e.code === '23505') {
+        alert("Username sudah digunakan. Silakan pilih username lain.");
+      } else {
+        alert("Pendaftaran gagal: " + (e.message || "Terjadi kesalahan."));
+      }
+      throw e;
+    }
+  };
+
   const handleLogout = () => {
     orderService.logout();
     setUser(null);
@@ -1300,7 +1389,7 @@ export default function App() {
     }
   };
 
-  if (!user) return <LoginView onLogin={handleLogin} />;
+  if (!user) return <LoginView onLogin={handleLogin} onRegister={handleRegister} />;
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col w-full max-w-7xl mx-auto relative shadow-2xl">
